@@ -10,29 +10,30 @@ class Controller
 {
     public function index()
     {
+        $producer = '';
         new BaseModel();
-        $reading = new ReadingModel();
-        $dataAll = $reading->readDataTable();
         $indexView = new IndexView();
-        $dataOffers = $dataAll;
-        $producers = [];
+        $reading = new ReadingModel();
 
         if (!empty($_POST)  && $_POST['offer'][0] !== '' && $_POST['offer'][0] !== "AllOffers") {
             $vendor = $_POST['offer'];
-            $dataOffers = [];
-            foreach ($dataAll as $key=>$data) {
-                if (in_array("$vendor[0]", $data))
-                $dataOffers[] = $dataAll[$key];
+            $producer ="$vendor[0]";
+        }
+
+        $dataAll = $reading->readDataTable($producer);
+        $dataOffers = $dataAll;
+        $producers = [];
+
+        session_start();
+        if (!isset($_SESSION['producers'])) {
+            foreach ($dataAll as $producer){
+                $producers[] = $producer['vendor'];
             }
+
+            $_SESSION['producers'] = array_unique($producers);
         }
-
-        foreach ($dataAll as $producer){
-            $producers[] = $producer['vendor'];
-        }
-
-        $producers = array_unique($producers);
-
-        $indexView->render($producers, $dataOffers);
+        
+        $indexView->render($_SESSION['producers'], $dataOffers);
     }
 
     public function writeData($filePath, $categories, $offers)
